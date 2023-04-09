@@ -28,7 +28,7 @@ jobs:
       with:
         role-to-assume: ${{ secrets.DEPLOYMENT_ROLE }}
         role-session-name: GHActions-${{ github.sha }}
-        region: us-west-2
+        aws-region: us-west-2
 
     - name: Package and deploy Lambdas
       run: |
