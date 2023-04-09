@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - workflow-testing
+      - dev
 
 jobs:
   deploy:
