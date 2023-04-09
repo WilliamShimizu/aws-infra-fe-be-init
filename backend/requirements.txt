@@ -1,0 +1,3 @@
+pyjwt
+boto3
+stripe
