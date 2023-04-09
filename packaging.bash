@@ -13,7 +13,9 @@ for lambda_dir in backend/*/; do
     # Package the Lambda code
     cd $lambda_dir
     cp -r ../common .
-    python -m pip install -r requirements.txt -t .
+    if [ -f requirements.txt ]; then
+        python -m pip install -r requirements.txt -t .
+    fi
     zip -r ../../${lambda_name}.zip *
     cd ../..
 
