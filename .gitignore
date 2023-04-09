@@ -1,0 +1,13 @@
+# Mac stuff
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
+
+# Python stuff
+venv/*
+**/venv/*
+
+# PyCharm stuff
+.idea/*
+**/.idea/*
