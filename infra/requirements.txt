@@ -1,0 +1,6 @@
+aws-cdk.core
+aws-cdk.aws_s3
+aws-cdk.aws_lambda
+aws-cdk.aws_apigateway
+aws-cdk.aws_cognito
+aws-cdk.aws_cloudfront
