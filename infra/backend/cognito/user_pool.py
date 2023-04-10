@@ -5,44 +5,47 @@ from aws_cdk import (
     core
 )
 
+from utils.context import Context
+
 
 class CognitoContainer(core.Construct):
 
-    def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
-        super().__init__(scope, id, **kwargs)
+    def __init__(self, scope: core.Construct, id: str, context: Context) -> None:
+        super().__init__(scope, id)
 
         user_data_bucket = s3.Bucket(
-            self, "UserData",
+            scope, "UserData",
             versioned=False,
-            removal_policy=core.RemovalPolicy.DESTROY
+            removal_policy=core.RemovalPolicy.DESTROY,
+            bucket_name=f'aws-infra-fe-be-init-user-data-{context.stage}'
         )
 
         # Cognito User Pool
-        self._user_pool = cognito.UserPool(self, "UserPool",
-            user_pool_name="MyUserPool",
+        self._user_pool = cognito.UserPool(scope, "UserPool",
+            user_pool_name="UserPool",
             self_sign_up_enabled=True,
             auto_verify=cognito.AutoVerifiedAttrs(email=True),
-            standard_attributes=cognito.StandardAttributes(email_required=True),
+            standard_attributes=cognito.StandardAttributes(**self._build_standard_attributes()),
             account_recovery=cognito.AccountRecovery.EMAIL_ONLY
         )
 
         self._user_pool_client = cognito.UserPoolClient(
-            self, "UserPoolClient",
+            scope, "UserPoolClient",
             user_pool=self._user_pool
         )
 
         # Cognito Identity Pool
-        self._identity_pool = cognito.CfnIdentityPool(self, "IdentityPool",
+        self._identity_pool = cognito.CfnIdentityPool(scope, "IdentityPool",
             identity_pool_name="IdentityPool",
             allow_unauthenticated_identities=False,
             cognito_identity_providers=[cognito.CfnIdentityPool.CognitoIdentityProviderProperty(
-                client_id=self._user_pool.user_pool_client_id,
+                client_id=self._user_pool_client.user_pool_client_id,
                 provider_name=self._user_pool.user_pool_provider_name
             )]
         )
 
         # IAM role for the Cognito Identity Pool
-        self._identity_pool_role = iam.Role(self, "CognitoAuthRole",
+        self._identity_pool_role = iam.Role(scope, "CognitoAuthRole",
             assumed_by=iam.FederatedPrincipal(
                 "cognito-identity.amazonaws.com",
                 conditions={
@@ -72,16 +75,23 @@ class CognitoContainer(core.Construct):
 
         # Attach the IAM role to the Cognito Identity Pool
         cognito.CfnIdentityPoolRoleAttachment(
-            self, "IdentityPoolRoleAttachment",
+            scope, "IdentityPoolRoleAttachment",
             identity_pool_id=self._identity_pool.ref,
             roles={"authenticated": self._identity_pool_role.role_arn}
         )
 
         self._paid_subscribers_group = cognito.CfnUserPoolGroup(
-            self, "PaidSubscribersGroup",
+            scope, "PaidSubscribersGroup",
             user_pool_id=self._user_pool.user_pool_id,
             group_name="paid_subscribers",
             description="Group for paid subscribers"
+        )
+
+    @staticmethod
+    def _build_standard_attributes() -> dict:
+        return dict(
+            email=cognito.StandardAttribute(required=True, mutable=True),
+            preferred_username=cognito.StandardAttribute(required=False, mutable=False)
         )
 
     @property
