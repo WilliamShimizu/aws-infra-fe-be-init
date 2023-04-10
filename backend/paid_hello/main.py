@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 # Add the path to the shared code directory to sys.path
 common_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -10,4 +11,8 @@ from common.shared import get_message
 
 
 def handler(event, context):
-    return get_message('Paid Subscriber')
+    return {
+        'statusCode': 200,
+        'headers': {'Content-Type': 'application/json'},
+        'body': json.dumps({'message': get_message('Paid Subscriber')})
+    }
