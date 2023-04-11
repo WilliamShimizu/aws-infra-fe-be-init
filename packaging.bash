@@ -1,6 +1,13 @@
 #!/usr/bin/bash
 
-LAMBDA_BUCKET=aws-infra-fe-be-init-lambda-us-west-2-dev
+LAMBDA_BUCKET=$1
+
+# S3 api will output the "Not Found" string to stderr, so '2>&1' to catpure that, too.
+bucket_does_not_exist=$(aws s3api head-bucket --bucket $LAMBDA_BUCKET 2>&1 | grep "Not Found" | wc -l)
+
+if [ $bucket_does_not_exist -eq 1]; then
+  aws s3api create-bucket --bucket-name $LAMBDA_BUCKET
+fi
 
 for lambda_dir in backend/*/; do
     # Skip the common directory
