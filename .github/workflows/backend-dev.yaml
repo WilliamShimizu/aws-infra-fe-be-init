@@ -9,11 +9,12 @@ on:
       - dev
     paths:
       - 'backend/**'
-      - 'packaging.bash'
+      - '.github/workflows/backend-template.yaml'
+      - '.github/workflows/backend-dev.yaml'
 
 jobs:
   call-backend-deploy-workflow:
-    uses: WilliamShimizu/aws-infra-fe-be-init/.github/workflows/backend-template.yaml@main
+    uses: ./.github/workflows/backend-template.yaml
     with:
       region: us-west-2
     secrets:
