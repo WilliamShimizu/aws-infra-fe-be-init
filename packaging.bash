@@ -2,12 +2,13 @@
 set -e # if anything throws an error, exit the script immediately instead of continuing.
 
 LAMBDA_BUCKET=$1
+REGION=$2
 
 # S3 api will output the "Not Found" string to stderr, so '2>&1' to catpure that, too.
 bucket_does_not_exist=$(aws s3api head-bucket --bucket $LAMBDA_BUCKET 2>&1 | grep "Not Found" | wc -l)
 
 if [ $bucket_does_not_exist -eq 1 ]; then
-  aws s3api create-bucket --bucket $LAMBDA_BUCKET
+  aws s3api create-bucket --bucket $LAMBDA_BUCKET --region $REGION
 fi
 
 for lambda_dir in backend/*/; do

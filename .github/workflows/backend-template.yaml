@@ -44,4 +44,6 @@ jobs:
 
     - name: Package and deploy Lambdas
       run: |
-        bash packaging.bash aws-infra-fe-be-init-lambda-${{ inputs.region }}-${{ inputs.stage }}
+        LAMBDA_NAME=aws-infra-fe-be-init-lambda-${{ inputs.region }}-${{ inputs.stage }}
+        LAMBDA_REGION=${{ inputs.region }}
+        bash packaging.bash $LAMBDA_NAME $LAMBDA_REGION
