@@ -17,5 +17,6 @@ jobs:
     uses: ./.github/workflows/backend-template.yaml
     with:
       region: us-west-2
+      stage: 'dev'
     secrets:
       inherit
