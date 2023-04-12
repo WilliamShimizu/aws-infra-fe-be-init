@@ -49,4 +49,4 @@ jobs:
         aws-region: us-west-2
 
     - name: Deploy CDK Stack
-      run: cdk deploy --all --require-approval never
+      run: cdk deploy --all --require-approval never -c stage=dev -c account=${{ secrets.AWS_ACCOUNT_ID }} -c region=us-west-2 -c stripeEndpoint=${{ secrets.STRIPE_ENDPOINT }} -c stripeApiKey=${{ secrets.STRIPE_API_KEY }}
