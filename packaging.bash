@@ -7,7 +7,7 @@ LAMBDA_BUCKET=$1
 bucket_does_not_exist=$(aws s3api head-bucket --bucket $LAMBDA_BUCKET 2>&1 | grep "Not Found" | wc -l)
 
 if [ $bucket_does_not_exist -eq 1 ]; then
-  aws s3api create-bucket --bucket-name $LAMBDA_BUCKET
+  aws s3api create-bucket --bucket $LAMBDA_BUCKET
 fi
 
 for lambda_dir in backend/*/; do

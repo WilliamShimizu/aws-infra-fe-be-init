@@ -11,6 +11,7 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-template.yaml'
       - '.github/workflows/backend-dev.yaml'
+      - 'packaging.bash'
 
 jobs:
   call-backend-deploy-workflow:
