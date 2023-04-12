@@ -8,6 +8,7 @@ from aws_cdk import aws_apigateway as apigw
 
 from backend.cognito.user_pool import CognitoContainer
 from utils.context import Context
+from utils.conventions import get_bucket_name
 
 
 class AuthorizationType(Enum):
@@ -61,17 +62,17 @@ class ApiFactory(object):
                 integration=apigw.LambdaIntegration(lambda_resource)
             )
             if auth_type == AuthorizationType.SIGNED_IN:
-                signed_in_authorizer = self._get_signed_in_authorizer()
                 kwargs.update(dict(
-                    authorization_type=signed_in_authorizer.auth_type,
+                    authorization_type=apigw.AuthorizationType.COGNITO,
                     authorizer=self._get_signed_in_authorizer()
                 ))
             elif auth_type == AuthorizationType.GROUP_MEMBERSHIP:
-                membership_authorizer: apigw.CfnAuthorizer = self._get_group_membership_authorizer()
+                membership_authorizer: apigw.TokenAuthorizer = self._get_group_membership_authorizer()
                 kwargs.update(dict(
-                    authorization_type=membership_authorizer.auth_type,
+                    authorization_type=apigw.AuthorizationType.CUSTOM,  # membership_authorizer.auth_type,
                     authorizer=membership_authorizer
                 ))
+                print(kwargs)
             # Add a method to our api
             api.add_method(api_method.value, **kwargs)
 
@@ -79,13 +80,9 @@ class ApiFactory(object):
         if not self._cognito_container:
             raise Exception('Cannot use signed in authorizer without cognito resources.')
         if not self._signed_in_authorizer:
-            self._signed_in_authorizer = apigw.CfnAuthorizer(
+            self._signed_in_authorizer = apigw.CognitoUserPoolsAuthorizer(
                 self._scope, id='CognitoUserPoolAuthorizer',
-                name='CognitoUserPoolAuthorizer',
-                rest_api_id=self._rest_api.rest_api_id,
-                type='COGNITO_USER_POOLS',
-                identity_source='method.request.header.Authorization',
-                provider_arns=[self._cognito_container.user_pool.user_pool_arn]
+                cognito_user_pools=[self._cognito_container.user_pool]
             )
         return self._signed_in_authorizer
 
@@ -94,20 +91,14 @@ class ApiFactory(object):
             auth_lambda = self._get_group_membership_authorizer_lambda()
             self._group_membership_authorizer = self.create_custom_authorizer(
                 auth_lambda,
-                'MembershipAuthorizer',
-                type='TOKEN',
-                authorizer_result_ttl_in_seconds=3600,  # Max
-                identity_source='method.request.header.Authorization'
+                'MembershipAuthorizer'
             )
         return self._group_membership_authorizer
 
     def create_custom_authorizer(self, lambda_function: aws_lambda.Function, name: str, **kwargs):
-        uri = f'arn:aws:apigateway:{core.Aws.REGION}:lambda:path/2015-03-31/functions/{lambda_function.function_arn}/invocations'
-        return apigw.CfnAuthorizer(
+        return apigw.TokenAuthorizer(
             self._scope, id=name,
-            rest_api_id=self._rest_api.rest_api_id,
-            authorizer_uri=uri,
-            name=name,
+            handler=lambda_function,
             **kwargs
         )
 
@@ -128,21 +119,9 @@ class ApiFactory(object):
         )
         if environment_variables:
             kwargs.update(dict(environment=environment_variables))
-        return aws_lambda.Function(self._scope, self._get_lambda_function_name(name), **kwargs)
+        return aws_lambda.Function(self._scope, id=name, function_name=name, **kwargs)
 
     def _get_lambda_code_bucket(self, scope: core.Construct):
-        bucket_name = f'aws-infra-fe-be-init-lambda-{self._context.region}-{self._context.stage}'
-        return s3.Bucket.from_bucket_name(scope, 'LambdaCodeBucket', bucket_name=bucket_name)
-
-    @staticmethod
-    def _get_lambda_function_name(api_name: str) -> str:
-        """
-        my_api -> MyApiLambda
-        :param api_name:
-        :return:
-        """
-        parts = []
-        for part in api_name.split('_'):
-            parts.append(part.capitalize())
-        parts.append('Lambda')
-        return ''.join(parts)
+        bucket_name = get_bucket_name(self._context, 'lambda')
+        return s3.Bucket(scope, 'LambdaCodeBucket', versioned=False,
+            removal_policy=core.RemovalPolicy.DESTROY, bucket_name=bucket_name)

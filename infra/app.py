@@ -1,8 +1,8 @@
 from aws_cdk import core
 
 from backend.cognito.user_pool import CognitoContainer
-from frontend.site_hosting import SiteHosting
-from backend.backend_apis import CloudFrontLambdaBackend
+from frontend.site_hosting import NetworkingLayer
+from backend.backend_apis import BackendApiLayer
 from utils.context import Context, EnvVarKey
 from utils.conventions import PROJECT_NAME
 
@@ -12,11 +12,9 @@ class MyStack(core.Stack):
     def __init__(self, scope: core.Construct, context: Context, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        region = core.Stack.of(self).region
-
         cognito_container = CognitoContainer(self, 'CognitoUserPool', context)
-        backend_apis = CloudFrontLambdaBackend(self, context, cognito_container, 'CloudFrontLambdaBackend')
-        site_hosting = SiteHosting(self, context, backend_apis.rest_api, 'SiteHosting')
+        backend_api = BackendApiLayer(self, context, cognito_container, 'LambdaBackend')
+        site_hosting = NetworkingLayer(self, context, backend_api, 'SiteHosting')
 
 
 def get_cli_arg(arg_key: str):
@@ -44,5 +42,5 @@ env = core.Environment(account=account, region=region)
 env_vars = {EnvVarKey.STRIPE_API_KEY: stripe_api_key, EnvVarKey.STRIPE_ENDPOINT: stripe_endpoint_secret}
 context = Context(PROJECT_NAME, env, stage, env_vars)
 
-MyStack(app, context, f'AwsInfraFeBeInit-{region}-{stage}', env=env)
+MyStack(app, context, f'{PROJECT_NAME}-{region}-{stage}', env=env)
 app.synth()

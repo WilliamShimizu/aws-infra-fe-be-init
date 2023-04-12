@@ -4,3 +4,4 @@ aws-cdk.aws_lambda
 aws-cdk.aws_apigateway
 aws-cdk.aws_cognito
 aws-cdk.aws_cloudfront
+aws-cdk.aws_route53

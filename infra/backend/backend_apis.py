@@ -5,10 +5,11 @@ from backend.cognito.user_pool import CognitoContainer
 from utils.context import Context, EnvVarKey
 
 
-class CloudFrontLambdaBackend(core.Construct):
+class BackendApiLayer(core.Construct):
 
     def __init__(self, scope: core.Construct, context: Context, cognito_container: CognitoContainer, id: str) -> None:
         super().__init__(scope, id)
+        self._context = context
 
         api_factory = ApiFactory(scope, context, cognito_container)
         self._rest_api = api_factory.rest_api
@@ -24,3 +25,11 @@ class CloudFrontLambdaBackend(core.Construct):
     @property
     def rest_api(self):
         return self._rest_api
+
+    @property
+    def domain_name(self):
+        return f'{self._rest_api.rest_api_id}.execute-api.{self._context.region}.amazonaws.com'
+
+    @property
+    def region(self):
+        return self._context.region
