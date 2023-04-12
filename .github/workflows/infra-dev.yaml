@@ -1,4 +1,7 @@
 name: Deploy CDK Stack
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
 
 on:
   push:
@@ -6,6 +9,7 @@ on:
       - dev
     paths:
       - 'infra/**'
+      - '.github/workflows/infra-dev.yaml'
 
 jobs:
   deploy:
