@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+set -e # if anything throws an error, exit the script immediately instead of continuing.
 
 LAMBDA_BUCKET=$1
 
