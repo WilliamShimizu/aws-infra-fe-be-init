@@ -72,7 +72,6 @@ class ApiFactory(object):
                     authorization_type=apigw.AuthorizationType.CUSTOM,  # membership_authorizer.auth_type,
                     authorizer=membership_authorizer
                 ))
-                print(kwargs)
             # Add a method to our api
             api.add_method(api_method.value, **kwargs)
 
@@ -123,5 +122,4 @@ class ApiFactory(object):
 
     def _get_lambda_code_bucket(self, scope: core.Construct):
         bucket_name = get_bucket_name(self._context, 'lambda')
-        return s3.Bucket(scope, 'LambdaCodeBucket', versioned=False,
-            removal_policy=core.RemovalPolicy.DESTROY, bucket_name=bucket_name)
+        return s3.Bucket.from_bucket_name(scope, 'LambdaCodeBucket', bucket_name=bucket_name)
