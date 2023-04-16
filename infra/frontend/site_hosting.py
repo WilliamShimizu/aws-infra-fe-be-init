@@ -75,11 +75,6 @@ class NetworkingLayer(core.Construct):
             behaviors=[
                 cloudfront.Behavior(
                     is_default_behavior=True,  # Important, we want all non /api/* traffic to go here.
-                    forwarded_values=cloudfront.CfnDistribution.ForwardedValuesProperty(
-                        query_string=True,
-                        headers=['*'],
-                        cookies=cloudfront.CfnDistribution.CookiesProperty(forward='all')
-                    )
                 )
             ],
         )
